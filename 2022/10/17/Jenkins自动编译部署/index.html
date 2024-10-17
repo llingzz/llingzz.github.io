@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang=zh>
+<head>
+    <!-- so meta -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="HandheldFriendly" content="True">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
+    <meta name="description" content="目前的项目中c++后端服务在编译部署测试服时还是采用笨拙的方案：本地编译再手动上传到测试服务器 如果直接再测试服务器上部署一套Jenkins后台，即可实现自动化编译和部署。安装Jenkins和相关环境配置在这不赘述，官方文档有很详细的说明。基于当前项目配置步骤如下：  新建freestyle project  勾选This project is parameterized，并新建Choice Pa">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Jenkins自动编译部署">
+<meta property="og:url" content="http://llingzz.github.io/2022/10/17/Jenkins%E8%87%AA%E5%8A%A8%E7%BC%96%E8%AF%91%E9%83%A8%E7%BD%B2/index.html">
+<meta property="og:site_name" content="llingzz&#39;s blogs">
+<meta property="og:description" content="目前的项目中c++后端服务在编译部署测试服时还是采用笨拙的方案：本地编译再手动上传到测试服务器 如果直接再测试服务器上部署一套Jenkins后台，即可实现自动化编译和部署。安装Jenkins和相关环境配置在这不赘述，官方文档有很详细的说明。基于当前项目配置步骤如下：  新建freestyle project  勾选This project is parameterized，并新建Choice Pa">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2022-10-17T08:43:23.000Z">
+<meta property="article:modified_time" content="2024-10-17T11:30:25.466Z">
+<meta property="article:author" content="llingzz">
+<meta property="article:tag" content="Jenkins">
+<meta name="twitter:card" content="summary">
+    
+    
+      
+        
+          <link rel="shortcut icon" href="/images/favicon.ico">
+        
+      
+      
+        
+          <link rel="icon" type="image/png" href="/images/favicon-192x192.png" sizes="192x192">
+        
+      
+      
+        
+          <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+        
+      
+    
+    <!-- title -->
+    <title>Jenkins自动编译部署</title>
+    <!-- async scripts -->
+    <!-- Google Analytics -->
+
+
+    <!-- Umami Analytics -->
+
+
+    <!-- styles -->
+    
+<link rel="stylesheet" href="/css/style.css">
+
+    <!-- persian styles -->
+    
+    <!-- rss -->
+    
+    
+	<!-- mathjax -->
+	
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+<body class="max-width mx-auto px3 ltr">
+    
+      <div id="header-post">
+  <a id="menu-icon" href="#" aria-label="目录"><i class="fa-solid fa-bars fa-lg"></i></a>
+  <a id="menu-icon-tablet" href="#" aria-label="目录"><i class="fa-solid fa-bars fa-lg"></i></a>
+  <a id="top-icon-tablet" href="#" aria-label="顶部" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');" style="display:none;"><i class="fa-solid fa-chevron-up fa-lg"></i></a>
+  <span id="menu">
+    <span id="nav">
+      <ul>
+        <!--
+       --><li><a href="/">首页</a></li><!--
+     --><!--
+       --><li><a href="/about/">关于</a></li><!--
+     --><!--
+       --><li><a href="/archives/">归档</a></li><!--
+     --><!--
+       --><li><a target="_blank" rel="noopener" href="https://github.com/llingzz">项目</a></li><!--
+     -->
+      </ul>
+    </span>
+    <br/>
+    <span id="actions">
+      <ul>
+        
+        
+        <li><a class="icon" aria-label="下一篇" href="/2022/09/09/%E6%A8%A1%E5%9D%97%E6%B3%A8%E5%86%8C%E6%9C%BA%E5%88%B6/"><i class="fa-solid fa-chevron-right" aria-hidden="true" onmouseover="$('#i-next').toggle();" onmouseout="$('#i-next').toggle();"></i></a></li>
+        
+        <li><a class="icon" aria-label="返回顶部" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fa-solid fa-chevron-up" aria-hidden="true" onmouseover="$('#i-top').toggle();" onmouseout="$('#i-top').toggle();"></i></a></li>
+        <li><a class="icon" aria-label="分享文章" href="#"><i class="fa-solid fa-share-alt" aria-hidden="true" onmouseover="$('#i-share').toggle();" onmouseout="$('#i-share').toggle();" onclick="$('#share').toggle();return false;"></i></a></li>
+      </ul>
+      <span id="i-prev" class="info" style="display:none;">上一篇</span>
+      <span id="i-next" class="info" style="display:none;">下一篇</span>
+      <span id="i-top" class="info" style="display:none;">返回顶部</span>
+      <span id="i-share" class="info" style="display:none;">分享文章</span>
+    </span>
+    <br/>
+    <div id="share" style="display: none">
+      <ul>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=http://llingzz.github.io/2022/10/17/Jenkins%E8%87%AA%E5%8A%A8%E7%BC%96%E8%AF%91%E9%83%A8%E7%BD%B2/"><i class="fab fa-facebook " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=http://llingzz.github.io/2022/10/17/Jenkins%E8%87%AA%E5%8A%A8%E7%BC%96%E8%AF%91%E9%83%A8%E7%BD%B2/&text=Jenkins自动编译部署"><i class="fab fa-twitter " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=http://llingzz.github.io/2022/10/17/Jenkins%E8%87%AA%E5%8A%A8%E7%BC%96%E8%AF%91%E9%83%A8%E7%BD%B2/&title=Jenkins自动编译部署"><i class="fab fa-linkedin " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=http://llingzz.github.io/2022/10/17/Jenkins%E8%87%AA%E5%8A%A8%E7%BC%96%E8%AF%91%E9%83%A8%E7%BD%B2/&is_video=false&description=Jenkins自动编译部署"><i class="fab fa-pinterest " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=Jenkins自动编译部署&body=Check out this article: http://llingzz.github.io/2022/10/17/Jenkins%E8%87%AA%E5%8A%A8%E7%BC%96%E8%AF%91%E9%83%A8%E7%BD%B2/"><i class="fa-solid fa-envelope " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=http://llingzz.github.io/2022/10/17/Jenkins%E8%87%AA%E5%8A%A8%E7%BC%96%E8%AF%91%E9%83%A8%E7%BD%B2/&title=Jenkins自动编译部署"><i class="fab fa-get-pocket " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=http://llingzz.github.io/2022/10/17/Jenkins%E8%87%AA%E5%8A%A8%E7%BC%96%E8%AF%91%E9%83%A8%E7%BD%B2/&title=Jenkins自动编译部署"><i class="fab fa-reddit " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=http://llingzz.github.io/2022/10/17/Jenkins%E8%87%AA%E5%8A%A8%E7%BC%96%E8%AF%91%E9%83%A8%E7%BD%B2/&title=Jenkins自动编译部署"><i class="fab fa-stumbleupon " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=http://llingzz.github.io/2022/10/17/Jenkins%E8%87%AA%E5%8A%A8%E7%BC%96%E8%AF%91%E9%83%A8%E7%BD%B2/&title=Jenkins自动编译部署"><i class="fab fa-digg " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=http://llingzz.github.io/2022/10/17/Jenkins%E8%87%AA%E5%8A%A8%E7%BC%96%E8%AF%91%E9%83%A8%E7%BD%B2/&name=Jenkins自动编译部署&description="><i class="fab fa-tumblr " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=http://llingzz.github.io/2022/10/17/Jenkins%E8%87%AA%E5%8A%A8%E7%BC%96%E8%AF%91%E9%83%A8%E7%BD%B2/&t=Jenkins自动编译部署"><i class="fab fa-hacker-news " aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+    
+    
+  </span>
+</div>
+
+    
+    <div class="content index py4 ">
+        
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+  <header>
+    
+    <h1 class="posttitle p-name" itemprop="name headline">
+        Jenkins自动编译部署
+    </h1>
+
+
+
+    <div class="meta">
+      <span class="author p-author h-card" itemprop="author" itemscope itemtype="http://schema.org/Person">
+        <span class="p-name" itemprop="name">llingzz</span>
+      </span>
+      
+    <div class="postdate">
+      
+        <time datetime="2022-10-17T08:43:23.000Z" class="dt-published" itemprop="datePublished">2022-10-17</time>
+        
+      
+    </div>
+
+
+      
+    <div class="article-category">
+        <i class="fa-solid fa-archive"></i>
+        <a class="category-link" href="/categories/Jenkins/">Jenkins</a>
+    </div>
+
+
+      
+    <div class="article-tag">
+        <i class="fa-solid fa-tag"></i>
+        <a class="p-category" href="/tags/Jenkins/" rel="tag">Jenkins</a>
+    </div>
+
+
+    </div>
+  </header>
+  
+
+  <div class="content e-content" itemprop="articleBody">
+    <p>目前的项目中c++后端服务在编译部署测试服时还是采用笨拙的方案：本地编译再手动上传到测试服务器</p>
+<p>如果直接再测试服务器上部署一套Jenkins后台，即可实现自动化编译和部署。安装Jenkins和相关环境配置在这不赘述，官方文档有很详细的说明。基于当前项目配置步骤如下：</p>
+<ol>
+<li><p>新建freestyle project</p>
+</li>
+<li><p>勾选This project is parameterized，并新建<strong>Choice Parameter</strong>和<strong>String Parameter</strong>两个参数，前者表示选择要部署的具体服务<strong>svrname</strong>，后者表示具体服务代码路径<strong>svn_path</strong>，设定好自定义的工作空间用来<strong>checkout</strong>代码（这里使用的svn，需要安装对应的svn的Jenkins插件）</p>
+</li>
+<li><p>在<strong>Subversion</strong>下配置<strong>svn</strong>配置，主要由两部分组成：<strong>Repository URL</strong>和<strong>Credentials</strong>，前者为svn路径，后者为svn账号权限（需要在Jenkins中配置），<strong>Local module directory</strong>下设定对应存放代码的本地目录**.${svrname}\svn<strong>，</strong>Repository depth<strong>选择</strong>infinity<strong>即可。部分服务可能不仅仅需要这个代码路径，同理添加配置即可。最后此模块选项</strong>Check-out Strategy<strong>按需设定就好，这里选择的是</strong>Use ‘svn update’ as much as possible**</p>
+</li>
+<li><p>接下来添加<strong>Build Steps</strong>，使用<strong>MSBuild</strong>(需要Jenkins插件支持)，设定<strong>MSBuild Version</strong>为<strong>vs2013</strong>，<strong>MSBuild Build File</strong>设定为**.${svrname}\svn${svrname}${svrname}.sln<strong>解决方案的文件目录，命令行参数</strong>Command Line Arguments**：&#x2F;t:Rebuild &#x2F;p:Configuration&#x3D;ReleaseS</p>
+</li>
+<li><p>添加构建后命令行操作<strong><strong>Execute Windows batch command</strong></strong>：</p>
+<p><code>set bak_path=%WORKSPACE%\%svrname%\backup\%BUILD_NUMBER%</code><br><code>set src_path=%WORKSPACE%\%svrname%\svn\%svrname%\ReleaseS</code><br><code>mkdir %bak_path%</code><br><code>cd E:\ServerController\ServerController\%svrname%</code><br><code>copy %svrname%.exe %bak_path%</code><br><code>copy %svrname%.pdb %bak_path%</code><br><code>sc config %svrname% start=DISABLED</code><br><code>rem sc stop %svrname%</code><br><code>taskkill /f /im %svrname%.exe /T</code><br><code>ping 127.0.0.1 -n 15 &gt;nul</code><br><code>sc query %svrname%</code><br><code>copy %src_path%\%svrname%.exe /y</code><br><code>copy %src_path%\%svrname%.pdb /y</code><br><code>sc config %svrname% start=DEMAND</code><br><code>sc start %svrname%</code><br><code>ping 127.0.0.1 -n 15 &gt;nul</code><br><code>sc query %svrname%</code></p>
+</li>
+<li><p>保存应用即可</p>
+</li>
+</ol>
+<p>PS：Jenkins内包含丰富的插件，可以用来实现复杂的自动化操作，这里只是一个非常简单的应用。</p>
+
+  </div>
+</article>
+
+
+
+        
+          <div id="footer-post-container">
+  <div id="footer-post">
+
+    <div id="nav-footer" style="display: none">
+      <ul>
+        
+          <li><a href="/">首页</a></li>
+        
+          <li><a href="/about/">关于</a></li>
+        
+          <li><a href="/archives/">归档</a></li>
+        
+          <li><a target="_blank" rel="noopener" href="https://github.com/llingzz">项目</a></li>
+        
+      </ul>
+    </div>
+
+    
+    
+
+    <div id="share-footer" style="display: none">
+      <ul>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=http://llingzz.github.io/2022/10/17/Jenkins%E8%87%AA%E5%8A%A8%E7%BC%96%E8%AF%91%E9%83%A8%E7%BD%B2/"><i class="fab fa-facebook fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=http://llingzz.github.io/2022/10/17/Jenkins%E8%87%AA%E5%8A%A8%E7%BC%96%E8%AF%91%E9%83%A8%E7%BD%B2/&text=Jenkins自动编译部署"><i class="fab fa-twitter fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=http://llingzz.github.io/2022/10/17/Jenkins%E8%87%AA%E5%8A%A8%E7%BC%96%E8%AF%91%E9%83%A8%E7%BD%B2/&title=Jenkins自动编译部署"><i class="fab fa-linkedin fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=http://llingzz.github.io/2022/10/17/Jenkins%E8%87%AA%E5%8A%A8%E7%BC%96%E8%AF%91%E9%83%A8%E7%BD%B2/&is_video=false&description=Jenkins自动编译部署"><i class="fab fa-pinterest fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=Jenkins自动编译部署&body=Check out this article: http://llingzz.github.io/2022/10/17/Jenkins%E8%87%AA%E5%8A%A8%E7%BC%96%E8%AF%91%E9%83%A8%E7%BD%B2/"><i class="fa-solid fa-envelope fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=http://llingzz.github.io/2022/10/17/Jenkins%E8%87%AA%E5%8A%A8%E7%BC%96%E8%AF%91%E9%83%A8%E7%BD%B2/&title=Jenkins自动编译部署"><i class="fab fa-get-pocket fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=http://llingzz.github.io/2022/10/17/Jenkins%E8%87%AA%E5%8A%A8%E7%BC%96%E8%AF%91%E9%83%A8%E7%BD%B2/&title=Jenkins自动编译部署"><i class="fab fa-reddit fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=http://llingzz.github.io/2022/10/17/Jenkins%E8%87%AA%E5%8A%A8%E7%BC%96%E8%AF%91%E9%83%A8%E7%BD%B2/&title=Jenkins自动编译部署"><i class="fab fa-stumbleupon fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=http://llingzz.github.io/2022/10/17/Jenkins%E8%87%AA%E5%8A%A8%E7%BC%96%E8%AF%91%E9%83%A8%E7%BD%B2/&title=Jenkins自动编译部署"><i class="fab fa-digg fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=http://llingzz.github.io/2022/10/17/Jenkins%E8%87%AA%E5%8A%A8%E7%BC%96%E8%AF%91%E9%83%A8%E7%BD%B2/&name=Jenkins自动编译部署&description="><i class="fab fa-tumblr fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=http://llingzz.github.io/2022/10/17/Jenkins%E8%87%AA%E5%8A%A8%E7%BC%96%E8%AF%91%E9%83%A8%E7%BD%B2/&t=Jenkins自动编译部署"><i class="fab fa-hacker-news fa-lg" aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+
+    <div id="actions-footer">
+        <a id="menu" class="icon" href="#" onclick="$('#nav-footer').toggle();return false;"><i class="fa-solid fa-bars fa-lg" aria-hidden="true"></i> 菜单</a>
+        
+        <a id="share" class="icon" href="#" onclick="$('#share-footer').toggle();return false;"><i class="fa-solid fa-share-alt fa-lg" aria-hidden="true"></i> 分享</a>
+        <a id="top" style="display:none" class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fa-solid fa-chevron-up fa-lg" aria-hidden="true"></i> 返回顶部</a>
+    </div>
+
+  </div>
+</div>
+
+        
+        <footer id="footer">
+  <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+  <span id="busuanzi_container_page_pv">
+    本文总阅读量<span id="busuanzi_value_page_pv"></span>次
+  </span>
+  <div class="footer-left">
+    Copyright &copy;
+    
+    
+    2016-2024
+    llingzz
+  </div>
+  <div class="footer-right">
+    <nav>
+      <ul>
+        <!--
+       --><li><a href="/">首页</a></li><!--
+     --><!--
+       --><li><a href="/about/">关于</a></li><!--
+     --><!--
+       --><li><a href="/archives/">归档</a></li><!--
+     --><!--
+       --><li><a target="_blank" rel="noopener" href="https://github.com/llingzz">项目</a></li><!--
+     -->
+      </ul>
+    </nav>
+  </div>
+</footer>
+
+    </div>
+    <!-- styles -->
+
+
+
+  <link rel="preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" onload="this.onload=null;this.rel='stylesheet'"/>
+
+
+    <!-- jquery -->
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js" crossorigin="anonymous"></script>
+
+
+
+
+<!-- clipboard -->
+
+  
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.7/clipboard.min.js" crossorigin="anonymous"></script>
+  
+  <script type="text/javascript">
+  $(function() {
+    // copy-btn HTML
+    var btn = "<span class=\"btn-copy tooltipped tooltipped-sw\" aria-label=\"复制到粘贴板！\">";
+    btn += '<i class="fa-regular fa-clone"></i>';
+    btn += '</span>';
+    // mount it!
+    $(".highlight table").before(btn);
+    var clip = new ClipboardJS('.btn-copy', {
+      text: function(trigger) {
+        return Array.from(trigger.nextElementSibling.querySelectorAll('.code')).reduce((str,it)=>str+it.innerText+'\n','')
+      }
+    });
+    clip.on('success', function(e) {
+      e.trigger.setAttribute('aria-label', "复制成功！");
+      e.clearSelection();
+    })
+  })
+  </script>
+
+
+<script src="/js/main.js"></script>
+
+<!-- search -->
+
+<!-- Baidu Analytics -->
+
+<!-- Cloudflare Analytics -->
+
+<!-- Disqus Comments -->
+
+<!-- utterances Comments -->
+
+</body>
+</html>
